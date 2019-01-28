@@ -47,10 +47,11 @@ traits_grp <- traits_grp %>%
   filter(apply(traits_grp[,-1], 1, function(x) sum(!is.na(x))) >= 6)
 
 # Dummy code to convert all variables to several binary columns.
+# Get rid of the last column because a categorical variable with n categories requires n-1 dummy variables
 trait_dummy_list <- imap(traits_grp[,-1], function(x, y) {
   res <- dummy.code(x) 
   dimnames(res)[[2]] <- paste(y, dimnames(res)[[2]], sep = '_')
-  res
+  res[, -ncol(res)] # delete last column
 })
 
 traits_dummy <- data.frame(taxon = traits_grp$SubjectTaxonomicName, do.call(cbind, trait_dummy_list), stringsAsFactors = FALSE)
@@ -82,7 +83,8 @@ mostsimilarpair$taxon # Peltodytes and Haliplus -- they actually do seem similar
 
 # What is the most dissimilar pair?
 mostdiffpair <- traits_dummy[which(traits_gower_mat == max(traits_gower_mat[traits_gower_mat < max(traits_gower_mat, na.rm = TRUE)], na.rm = TRUE), arr.ind = TRUE)[1,], ]
-mostdiffpair$taxon # A dragonfly and a small minnow mayfly. Different I guess???
+traits_dummy[which(traits_gower_mat == max(traits_gower_mat, na.rm = TRUE), arr.ind = TRUE)[1,], ]
+mostdiffpair$taxon # A dragonfly and a giant water bug. Different I guess???
 
 # Use silhouette width to determine the optimal number of clusters with PAM algorithm (partitioning around medoids)
 # It is sort of like an R2
@@ -109,4 +111,5 @@ tsne_data <- traits_tsne$Y %>%
 
 ggplot(aes(x = X, y = Y), data = tsne_data) +
   geom_point(aes(color = cluster))
-# Clearly this is not a good situation. We need to refine things more.
+# The clusters are somewhat separated on this visualization plot, but there is a lot of noise and overlap.
+# Hopefully this will improve if we refine things.
