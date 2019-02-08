@@ -20,21 +20,22 @@ graphics.off()
 library(plyr)
 library(dplyr)
 library(ggplot2)
+library(reshape2)
 
-#setwd("~/Documents/WaterCube/Aquaxterra_code_data/Insect_R_scripts_data/STORET_data/WQP_insect_final")
+setwd("~/Documents/WaterCube/Aquaxterra_code_data/aquatic_insects/code/Data_cleaning_WQP_traits")
 ##########Read-in data from Google Drive####################################################################
 
 #new dataset- combine Ethan, Minali, Erika datasets
 #AquaticInsects/aquaticinsect_database/Data_files/Bhatt_biotraits_12_7_18.csv
 data.key="11tuv40H55w7w_DYgFRE535Kg5qOkn7eV"
-Bhatt <-  read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", data.key), stringsAsFactors=F, na.strings=c(""," ", "NA"))
+Bhatt <-  read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", data.key), stringsAsFactors=F, na.strings=c(""," ", "NA"), fileEncoding="UTF-8")
 str(Bhatt)
 
 id<-"1fIVjA6nL8WnKCTTkdj8CqUQQuUo9opdJ"
-Ralston<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id), stringsAsFactors=F, na.strings=c(""," ", "NA"))
+Ralston<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id), stringsAsFactors=F, na.strings=c(""," ", "NA"), fileEncoding="UTF-8")
 
 id2<-"1rjzWZA7oNrEJ4HviqmM-h0hgF7tZ7wna"
-Hiltner<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id2), stringsAsFactors=F, na.strings=c(""," ", "NA"))
+Hiltner<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id2), stringsAsFactors=F, na.strings=c(""," ", "NA"), fileEncoding="UTF-8")
 #Hiltner<-read.csv('Hiltner_biotraits_master.csv', stringsAsFactors = FALSE, na.strings=c(""," ", "NA"))
 #Bhatt<-read.csv('Bhatt_biotraits_12_7_18.csv', stringsAsFactors = FALSE, na.strings=c(""," ", "NA"))
 #Ralston<-read.csv('Ralston_biotraits_12_07_18.csv', stringsAsFactors = FALSE, na.strings=c(""," ", "NA"))
@@ -306,7 +307,6 @@ biotraits[which(biotraits$Rheophily_comments == "Standing-slight" ), ]
 biotraits[which(biotraits$Rheophily_comments == "Fast" ), ]
 biotraits[which(biotraits$Genus == "Cricotopus" ), ]
 biotraits[which(biotraits$Rheophily_comments == "Standing" ), ]
-biotraits[which(biotraits$Rheophily_comments == "Standing" ), ]
 biotraits$Volt_comments[which(biotraits$Rheophily_comments == "bi_multivoltune (18+/yr)"  )]<-"bi_multivoltune (18+/yr)"
 biotraits$Rheophily_comments[which(biotraits$Rheophily_comments == "bi_multivoltune (18+/yr)"  )]<-NA
 biotraits[which(biotraits$Rheophily_comments == "Semivoltine, with variable cohorts"  ), ]
@@ -413,7 +413,7 @@ biotraits1$Study_Citation_abbrev[which(biotraits1$Study_Citation_abbrev == "Ca�
 #read in citation list from Ethan to match up full citation with citation_abbrev
 
 id3<-"19vXpbnCDCm0iwNAP9cGYORxYJZqLaDXZ"
-citations<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id3), stringsAsFactors = FALSE, na.strings=c(""," ", "NA"))
+citations<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id3), stringsAsFactors = FALSE, na.strings=c(""," ", "NA"), fileEncoding="UTF-8")
 citations<-citations[rowSums(is.na(citations)) != ncol(citations),]
 #remove parantheses
 citations$Study_Citation_abbrev<-gsub("[()]", "", citations$Study_Citation_abbrev)
@@ -443,6 +443,9 @@ colnames(biotraits2)[35]<-"Study_Citation"
 
 #check consistency of Study_Citation_abbrev
 unique(biotraits2$Study_Citation_abbrev)
+biotraits2[which(biotraits2$Study_Citation_abbrev == "Merrit et al. 1992"  ), ]
+biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation_abbrev == "Merrit et al. 1992"  ) ]<-"Merritt et al. 1992"
+
 biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation_abbrev == "Merrit & Cummins 1984"  ) ]<-"Merritt & Cummins 1984"
 
 biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation_abbrev == "Nils & B≈°ttger 2001"  ) ]<-"Nils & B\u00f6ttger 2001"
@@ -474,9 +477,10 @@ biotraits2[which(biotraits2$Study_Citation_abbrev == "Poff et al. 2006"  ), ]
 biotraits2$Study_Citation[which(biotraits2$Study_Citation_abbrev == "Poff et al. 2006"  ) ]<-"Poff, N. LeRoy, Julian D. Olden, Nicole K. M. Vieira, Debra S. Finn, Mark P. Simmons, and Boris C. Kondratieff. Functional Trait Niches of North American Lotic Insects: Traits-Based Ecological Applications in Light of Phylogenetic Relationships. Journal of the North American Benthological Society 25, no. 4 (December 1, 2006): 730–55"
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Lenat 1987"  ), ]
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Arnet 1985"   ), ]
+biotraits2$Study_Citation[which(biotraits2$Study_Citation_abbrev == "Arnet 1985"   ) ]<-"Arnett Jr, Ross H. American insects: a handbook of the insects of America north of Mexico. Van Nostran Reinhold Company Ltd., 1985."
 biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation_abbrev == "Arnet 1985"   ) ]<-"Arnett 1985"
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Arnett 1985"   ), ]
-biotraits2$Study_Citation[which(biotraits2$Study_Citation_abbrev == "Arnet 1985"   ) ]<-"Arnett Jr, Ross H. American insects: a handbook of the insects of America north of Mexico. Van Nostran Reinhold Company Ltd., 1985."
+biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation_abbrev == "Arnet & Thomas 2001"   ) ]<-"Arnett & Thomas 2001"
 
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Merritt, Cummins, Berg 2008"   ), ]
 biotraits2$Study_Citation[which(biotraits2$Study_Citation_abbrev == "Merritt, Cummins, Berg 2008"   ) ]<-"Merritt, Richard W., et al. 2008. An Introduction to the Aquatic Insects of North America. 4th ed., Kendall/Hunt Publishing Company"
@@ -489,27 +493,71 @@ biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation ==  "Paulson, D
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Corbet et al. 2006"   ), ]
 biotraits2$Study_Citation[which(biotraits2$Study_Citation_abbrev == "Wiggins 1996"   ) ]<-"Wiggins, G.B. 1996. Larvae of the North American caddisfly genera: (trichoptera). (2nd ed.). Toronto: University of Toronto Press."
 biotraits2[which(biotraits2$Study_Citation == "(In the USGS Database of Lotic Invertebrate Traits for North America): The genus Phylloicus M√É¬¢√¢‚Äö¬¨√Ö¬°√É∆í√¢‚Ç¨≈æ√É∆í√Ç¬∂√É¬¢√ã‚Ä†√Ö¬°√É∆í√¢‚Ç¨Àú√É¬¢√ã‚Ä†√Ö¬°√É‚Äö√Ç¬•_ller in the United States, with a redescription of Phylloicus ornatus"),]
-biotraits2[which(biotraits2$Study_Citation_abbrev == "Arnett & Thomas 2000"   ), ]
+biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation_abbrev == "Arnett & Thomas 2000"   )]<-"Arnett & Thomas 2001"
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Frank & Kee-Jeong 2011"   ), ]
 biotraits2$Study_Citation_abbrev[which(biotraits2$Study_Citation == "Arnett Jr, Ross H.American insects: a handbook of the insects of America north of Mexico. Crc Press, 2000."   ) ]<-"Arnett 2000"
 biotraits2[which(biotraits2$Study_Citation_abbrev == "Chaboo & Shepard 2015"   ), ]
-########Check naming consistency#################"   ), ]
 
 #write citations table
 biotraits_citations<-biotraits2[,c("Study_Citation_abbrev", "Study_Citation")]
 citations2<-unique(biotraits_citations)
 citations3<-subset(citations2, Study_Citation_abbrev!="USGS 2006")
 
-#characters are corrupted when writing as a csv
+#need to choose encoding when opening file using excel, otherwise characters are corrupted
 write.csv(citations3, "citations_corrected.csv", fileEncoding = "UTF-8")
 
+
+########Check naming consistency#################
+unique(biotraits2$Order) #ok
+unique(biotraits2$Family) #ok
+unique(biotraits2$SubjectTaxonomicName, options(max.print=5000))
+#remove trailing white space
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+biotraits2$SubjectTaxonomicName<-trim(biotraits2$SubjectTaxonomicName)
+#fix entries with weird characters
+biotraits2$SubjectTaxonomicName[which(biotraits2$SubjectTaxonomicName == "AncyronyxâˆšÃ©Â¬Ã¦variegatus") ]<-"Ancronyx variegatus"
+biotraits2$SubjectTaxonomicName[which(biotraits2$SubjectTaxonomicName == "PeltodytesâˆšÃ©Â¬Ã¦duodecimpuntatusâˆšÃ©Â¬Ã¦âˆšÃ©Â¬Ã¦âˆšÃ©Â¬Ã¦") ]<-"Peltodytes duodecimpuntatus"
+biotraits2$SubjectTaxonomicName[which(biotraits2$SubjectTaxonomicName == "ParalauterborniellaâˆšÃ©Â¬Ã¦nigrohalterale") ]<-"Paralauterborniella nigrohalterale"
+biotraits2$SubjectTaxonomicName[which(biotraits2$SubjectTaxonomicName == "ZaitzeviaâˆšÃ©Â¬Ã¦parvulus") ]<-"Zaitzevia parvulus"
+biotraits2$SubjectTaxonomicName[which(biotraits2$SubjectTaxonomicName == "HomoleptohyphesÃ‚Â dimorphus") ]<-"Homoleptohyphes dimorphus"
+biotraits2$SubjectTaxonomicName[which(biotraits2$SubjectTaxonomicName == "TricorythodesÃ‚Â explicatus" ) ]<-"Tricorythodes explicatus"
+  
+#this removed punctuation
+biotraits2$SubjectTaxonomicName<-gsub("[[:punct:]]", " ", biotraits2$SubjectTaxonomicName)
+#this removed special characters
+biotraits2$SubjectTaxonomicName<-gsub("[Ã â  Å ÃƒÂ ÃƒÂ Ã Ë Å Ã Â Ã Â Ã Â Ã Ë Å Ã Â ]", " ", biotraits2$SubjectTaxonomicName)
+#remove extra white space
+biotraits2$SubjectTaxonomicName<-gsub("\\s+"," ",biotraits2$SubjectTaxonomicName)
+
+#remove NA record from SubjectTaxonomicName where genus is also NA
+biotraits2[is.na(biotraits2$SubjectTaxonomicName),]
+
+biotraits2[15429,1]<-"Auleutes"
+biotraits2[16147,1]<-"Matriella"
+biotraits2[16148,1]<-"Penelomax"
+
+biotraits3<-biotraits2[!is.na(biotraits2$SubjectTaxonomicName),]
+
+#####################Check names and TSN in ITIS################################################
+library(taxize)
+
+#which entries have NAs for TSN?
+nas<-biotraits3[is.na(biotraits3$TSN),]
+
+#first check name consistency of taxa without NAs for TSN, then check for taxa with NAs using SubjectTaxonomicName. Keep DFs of old names and new names for each to remove old names from occurrence data
+ids<-biotraits3[!is.na(biotraits3$TSN),] #create DF of taxa without NA in TSN
+
+ids$TSN<-sub("*$", "", ids$TSN) #remove * on TSN
+ids<-ids$TSN
+
+itis_names<-itis_acceptname(searchtsn = ids) #get a vector of accepted names for each tsn
 
 write.csv(biotraits2, "Insect_raw_traits.csv")
 #######convert characters to factors############
 DF[sapply(DF, is.character)] <- lapply(DF[sapply(DF, is.character)], 
                                        as.factor)
 
-######Comparing new and old databases- Ethan code###############################################
+######Comparing new and old databases- Ethan code- not working###############################################
 #old dataset
 biotraits6 <-  read.csv('biotraits8_11_30_17.csv', stringsAsFactors = FALSE, na.strings=c("","NA"))
 
@@ -523,15 +571,16 @@ biotraits6$data <- "USEPA_Database"
 biotraits$data <- "New_Database"
 
 #filtering both datasets to only include certain columns 
-biotraits1<-biotraits%>%select(SubjectTaxonomicName, Order, Family,Genus,Voltinism_abbrev,Feed_prim_abbrev,Habit_prim,Resp_abbrev,Max_body_size_abbrev,Rheophily_abbrev,Thermal_pref,AdultFlyingStrength_abbrev,Emerge_season_1,Emerge_synch_abbrev, data, Study_Citation_abbrev)
+biotraits_new<-biotraits3%>%
+  select(SubjectTaxonomicName, Order, Family,Genus,Voltinism_abbrev,Feed_prim_abbrev,Habit_prim,Resp_abbrev,Max_body_size_abbrev,Rheophily_abbrev,Thermal_pref,AdultFlyingStrength_abbrev,Emerge_season_1,Emerge_synch_abbrev, data, Study_Citation_abbrev)
 biotraits7<-biotraits6%>%select(SubjectTaxonomicName, Order, Family, Genus,Voltinism_abbrev,Feed_prim_abbrev,Habit_prim,Resp_abbrev,Max_body_size_abbrev,Rheophily_abbrev,Thermal_pref,AdultFlyingStrength_abbrev,Emerge_season_1,Emerge_synch_abbrev, data, Study_Citation_abbrev)
 
 #combine both datasets into one dataset
 df <- rbind(biotraits1, biotraits7)
 
 #changing to long format
-biotraits2<-melt(df, id="Genus", na.rm=TRUE) 
-biotraits3<-dcast(biotraits2, variable+ value~Genus)
+biotraits_new<-melt(biotraits3, id="Genus", na.rm=TRUE) 
+biotraits_new2<-dcast(biotraits3, variable+ value~Genus)
 
 #sum unique genera in each trait state
 n_Genus1=rowSums(biotraits3 != 0)
