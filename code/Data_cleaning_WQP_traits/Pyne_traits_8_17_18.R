@@ -138,7 +138,12 @@ colnames(pynetraits3)
 #create column indicating Pyne traits
 pynetraits3$Study_Citation_abbrev<-"Pyne traits"
 
-#combine pynetraits4 with biotraits1 WQP taxa
+#How many unique genera in Pynetraits
+length(unique(pynetraits3$Genus))
+#how many are insects?
+unique(pynetraits3$Order)
+
+################################combine pynetraits4 with biotraits1 WQP taxa#################################################################################
 #subset biotraits1 to just WQP taxa that Ethan is adding
 biotraits2<-biotraits1[1:1084,]
 #use semi join- keep all observations in biotraits2, only observations that match SubjectTaxonomicName in pynetraits3
@@ -150,8 +155,13 @@ pyne_ethan_traits3<-arrange(pyne_ethan_traits2, Order, SubjectTaxonomicName)
 #write to csv for Ethan to work on
 write.csv(pyne_ethan_traits3, "Hiltner_biotraits.csv")
 
-#next merge remaining pynetraits with rest of EPA trait database, and combine the entire dataset
+##################################next merge remaining pynetraits with rest of EPA trait database, and combine the entire dataset###############################
 pyne_epa_traits<-pynetraits3%>%anti_join(biotraits2, by="SubjectTaxonomicName")
+#how many genera from Pyne traits were not in EPA database?
+length(unique(pyne_epa_traits$Genus)) #494 unique genera not in Ethan's dataset
+pyne_unique<-pynetraits3%>%anti_join(biotraits1, by="SubjectTaxonomicName")
+length(unique(pyne_unique$Genus)) #74 genera not in USEPA database (our subset of database)- need to check 
+
 #subset epa database
 biotraits3<-biotraits1[-c(1:1084),]
 pyne_epa_traits2<-merge(pyne_epa_traits, biotraits3, all=TRUE, sort=FALSE)
@@ -169,7 +179,7 @@ biotraits4<-merge(pyne_ethan_traits3, pyne_epa_traits3,  all=TRUE, sort=FALSE)
 #write csv for full trait dataset
 write.csv(biotraits4, "biotraits_8_23_18.csv")
 
-#read in new PA data and divide in half
+####################################################read in new PA data and divide in half###########################################################
 Ralston<-read.csv("Ralston_biotraits_10_15_18.csv")
 Bhatt<-read.csv("Bhatt_biotraits_10_15_18.csv")
 Bhatt2<-subset(Bhatt, Order=="Carabidae"|Order=="Coleoptera"|Order=="Diptera")
