@@ -11,27 +11,54 @@ setwd("~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits"
 
 #read-in data
 biotraits7.4<-read.csv("~/Documents/WaterCube/Ch.3/aquatic_insects/biotraits_wide2.csv")
+epa<-read.csv("epa_traits.csv", stringsAsFactors = FALSE)
 
 #load packages
 library(tidyverse)
 library(reshape2)
 
 ################## Summarize trait mode #############################################################
+#combine epa and biotraits tables
+names(biotraits7.5)
+names(epa)
+biotraits7.5<-biotraits7.4[,-c(1,2,21,25)]
+epa2<-epa %>% select(c("Study_Citation_abbrev", "SubjectTaxonomicName","AdultFlyingStrength_abbrev","Emerge_season_1", "Emerge_season_2", "Emerge_season_comments","Emerge_synch_abbrev","Family","Feed_mode_comments","Feed_mode_sec","Feed_prim_abbrev","Female_disp_abbrev", "Genus", "Habit_comments","Habit_prim_abbrev","Habit_sec","Max_body_size_abbrev", "Order", "Resp_abbrev","Resp_comments","Rheophily_abbrev","Study_location_state","Thermal_pref", "TSN","Volt_comments",  "Voltinism_abbrev","acceptedtsn","Accepted_name", "Study_Citation"))
+epa2$Taxonomic_resolution<-NA
+epa2$Taxonomic_resolution<-ifelse(as.character(epa2$Accepted_name)==as.character(epa2$Genus),"Genus", NA)
+epa2$Taxonomic_resolution<-ifelse(as.character(epa2$Accepted_name)==as.character(epa2$Family),"Family", epa2$Taxonomic_resolution)
+epa2$Taxonomic_resolution<-ifelse(as.character(epa2$Accepted_name)==as.character(epa2$Order),"Order", epa2$Taxonomic_resolution)
+epa2$Taxonomic_resolution<-ifelse(as.character(epa2$Accepted_name)==as.character(epa2$Order),"Order", epa2$Taxonomic_resolution)
+#remove name in parentheses from Genus and Accepted_name
+unique(epa2$Accepted_name)
+epa2$Accepted_name[which(epa2$Accepted_name=="Gomphus (Gomphurus)")]<-"Gomphus"
+epa2$Accepted_name[which(epa2$Accepted_name=="Gomphus (Hylogomphus)")]<-"Gomphus"
+epa2$Accepted_name[which(epa2$Accepted_name=="Epitheca (Epicordulia)")]<-"Epitheca"
+epa2$Accepted_name[which(epa2$Accepted_name=="Hydrophilus (Dibolocelus)")]<-"Hydrophilus"
+epa2$Accepted_name[which(epa2$Accepted_name=="Epitheca (Tetragoneuria)")]<-"Epitheca"
+
+
+epa2$Taxonomic_resolution[which(epa2$Accepted_name=="Cricotopus (Nostococladius)")]<-"Genus"
+epa2$Taxonomic_resolution<-ifelse(is.na(epa2$Taxonomic_resolution),"Species", epa2$Taxonomic_resolution)
+
+names(epa2)
+names(biotraits7.5)
+colnames(epa2)<-colnames(biotraits7.5)
+
+biotraits7.6<-rbind(epa2, biotraits7.5)
+
 #first convert any with trait "other" to NA
-biotraits7.4$Feed_prim_abbrev[which(biotraits7.4$Feed_prim_abbrev=="Other (specify in comments)")]<-NA
-biotraits7.4$Feed_mode_sec[which(biotraits7.4$Feed_mode_sec=="Other (specify in comments)")]<-NA
-biotraits7.4$Habit_prim[which(biotraits7.4$Habit_prim=="Other (specify in comments)")]<-NA
-biotraits7.4$Habit_sec[which(biotraits7.4$Habit_sec=="Other (specify in comments)")]<-NA
+biotraits7.6$Feed_prim_abbrev[which(biotraits7.6$Feed_prim_abbrev=="Other (specify in comments)")]<-NA
+biotraits7.6$Feed_mode_sec[which(biotraits7.6$Feed_mode_sec=="Other (specify in comments)")]<-NA
+biotraits7.6$Habit_prim[which(biotraits7.6$Habit_prim=="Other (specify in comments)")]<-NA
+biotraits7.6$Habit_sec[which(biotraits7.6$Habit_sec=="Other (specify in comments)")]<-NA
 # For now, use the most common trait value (mode) per taxon
 mode_fn <- function(x) ifelse(any(!is.na(x)), names(which.max(table(x))), as.character(NA))
 
-count_mode <- biotraits7.4 %>% filter(!is.na(Genus)) %>%group_by(Genus) %>%summarize_all(mode_fn)
+count_mode <- biotraits7.6 %>% filter(!is.na(Genus)) %>%group_by(Genus) %>%summarize_all(mode_fn)
 
 ################### Prep trait mode table for EDI ##################################################
-count_mode2<-count_mode[,-c(2,3)]
-
 #remove comments columns
-count_mode3<-count_mode2[,-grep(pattern="comments", colnames(count_mode2))] 
+count_mode3<-count_mode[,-grep(pattern="comments", colnames(count_mode))] 
 
 #create ancillary taxonomy table- need to add taxa from occurrence table, also
 names(count_mode3)
@@ -65,7 +92,7 @@ ancillary_taxonomy_master<-full_join(ancillary_taxonomy, occurrence_taxa4)
 write.csv(ancillary_taxonomy_master, "ancillary_taxonomy_table_master.csv")
 
 #subset mode table to columns we want in final table
-count_mode4<-select(count_mode3,-c("Study_Citation_abbrev", "SubjectTaxonomicName", "Family", "Order", "Published", "Study_location_region", "Study_location_state", "Original_TSN", "Accepted_TSN", "Accepted_Name", "Study_Citation", "Taxonomic_resolution"))
+count_mode4<-select(count_mode3,-c("Study_Citation_abbrev", "SubjectTaxonomicName", "Family", "Order", "Study_location_state", "Original_TSN", "Accepted_TSN", "Accepted_Name", "Study_Citation", "Taxonomic_resolution"))
 
 #convert trait mode table to long format
 keycol=c("Trait_group")
@@ -79,28 +106,22 @@ trait_mode.long2<-trait_mode.long[order(trait_mode.long$Genus),]
 write.csv(trait_mode.long2, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/trait_mode_table.csv")
 
 ################## Calculate affinity scores #######################################################
-str(biotraits7.4) #all traits are factors
-unique(biotraits7.4$Emerge_season_1) #levels consistent- ignore error in reshape2 function about diff. levels
-unique(biotraits7.4$Emerge_season_2)
-unique(biotraits7.4$Voltinism_abbrev)
-unique(biotraits7.4$Thermal_pref)
-unique(biotraits7.4$Habit_prim)
-unique(biotraits7.4$Habit_sec)
-unique(biotraits7.4$AdultFlyingStrength_abbrev)
-unique(biotraits7.4$Max_body_size_abbrev)
-unique(biotraits7.4$Resp_abbrev)
-unique(biotraits7.4$Rheophily_abbrev)
-unique(biotraits7.4$Emerge_synch_abbrev)
-unique(biotraits7.4$Female_disp_abbrev)
+str(biotraits7.6) #all traits are factors
+unique(biotraits7.6$Emerge_season_1) #levels consistent- ignore error in reshape2 function about diff. levels
+unique(biotraits7.6$Emerge_season_2)
+unique(biotraits7.6$Voltinism_abbrev)
+unique(biotraits7.6$Thermal_pref)
+unique(biotraits7.6$Habit_prim)
+unique(biotraits7.6$Habit_sec)
+unique(biotraits7.6$AdultFlyingStrength_abbrev)
+unique(biotraits7.6$Max_body_size_abbrev)
+unique(biotraits7.6$Resp_abbrev)
+unique(biotraits7.6$Rheophily_abbrev)
+unique(biotraits7.6$Emerge_synch_abbrev)
+unique(biotraits7.6$Female_disp_abbrev)
 
 #reshape table into long format
-traits.long<- biotraits7.4%>%filter(!is.na(Genus))%>%gather_(keycol, valuecol, gathercol) #create a column "trait" that holds all trait assignments
-
-#check that warming message makes no difference- TRUE
-biotraits7.4.1<-read.csv("~/Documents/WaterCube/Ch.3/aquatic_insects/biotraits_wide2.csv", stringsAsFactors = FALSE)
-traits.long.1<- biotraits7.4.1%>%filter(!is.na(Genus))%>%gather_(keycol, valuecol, gathercol) #create a column "trait" that holds all trait assignments
-length(is.na(traits.long.1$Trait))
-length(is.na(traits.long$Trait))
+traits.long<- biotraits7.6%>%filter(!is.na(Genus))%>%gather_(keycol, valuecol, gathercol) #create a column "trait" that holds all trait assignments
 
 affinities<-traits.long%>%filter(!is.na(Trait))%>%
   group_by(Genus, Trait_group, Trait)%>%
@@ -116,26 +137,26 @@ write.csv(affinities2, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cle
 
 
 ################## Prep raw trait table to for hosting by EDI #####################################################
-names(biotraits7.4)
+names(biotraits7.6)
 
 #select columns
-biotraits7.5<-select(biotraits7.4, -c("X.1", "X", "Published", "Study_location_region", "Accepted_TSN"))
+biotraits7.7<-select(biotraits7.6, -"Accepted_TSN")
 
 #convert to long format- include trait comments
 gathercol2<-c("AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_season_comments" ,"Emerge_synch_abbrev", "Feed_prim_abbrev", "Feed_mode_sec", "Feed_mode_comments","Female_disp_abbrev", "Habit_prim", "Habit_sec", "Habit_comments","Max_body_size_abbrev", "Resp_abbrev", "Resp_comments","Rheophily_abbrev", "Thermal_pref", "Voltinism_abbrev", "Volt_comments")
 
-traits.long.raw<- biotraits7.5%>%gather_(keycol, valuecol, gathercol2) #create a column "trait" that holds all trait assignments
+traits.long.raw<- biotraits7.7%>%gather_(keycol, valuecol, gathercol2) #create a column "trait" that holds all trait assignments
 
 #rename columns
 colnames(traits.long.raw)<-c("Study_citation_abbrev", "Submitted_name_trait", "Family", "Genus", "Order", "Study_location_state", "Submitted_TSN", "Accepted_name", "Study_citation", "Taxonomic_resolution", "Trait_group", "Trait")
 
 #drop unneeded columns
-traits.long.raw2<-traits.long.raw[,-c(3,4,5)]
+traits.long.raw2<-traits.long.raw[,-c(3,4,5,8)]
 
 #reorder columns
-traits.long.raw2<-traits.long.raw2[,c(7,2,4,5,8,9,1,6,3)]
+traits.long.raw2<-traits.long.raw2[,c(6,2,4,7,8,1,5,3)]
 
 #.csv of raw_trait_table for EDI
 write.csv(traits.long.raw2, "raw_trait_table_EDI.csv")
 
-save.image("Calc_trait_affinity_mode.R")
+save.image("Calc_trait_affinity_mode.RData")
