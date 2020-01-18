@@ -9,6 +9,9 @@ graphics.off()
 
 setwd("~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits")
 
+#Load workspace image
+load(file='Calc_trait_affinity_mode.RData')
+
 #read-in data
 biotraits7.4<-read.csv("~/Documents/WaterCube/Ch.3/aquatic_insects/biotraits_wide2.csv")
 epa<-read.csv("epa_traits.csv", stringsAsFactors = FALSE)
@@ -19,9 +22,9 @@ library(reshape2)
 
 ################## Summarize trait mode #############################################################
 #combine epa and biotraits tables
+biotraits7.5<-biotraits7.4[,-c(1,2,21,25)]
 names(biotraits7.5)
 names(epa)
-biotraits7.5<-biotraits7.4[,-c(1,2,21,25)]
 epa2<-epa %>% select(c("Study_Citation_abbrev", "SubjectTaxonomicName","AdultFlyingStrength_abbrev","Emerge_season_1", "Emerge_season_2", "Emerge_season_comments","Emerge_synch_abbrev","Family","Feed_mode_comments","Feed_mode_sec","Feed_prim_abbrev","Female_disp_abbrev", "Genus", "Habit_comments","Habit_prim_abbrev","Habit_sec","Max_body_size_abbrev", "Order", "Resp_abbrev","Resp_comments","Rheophily_abbrev","Study_location_state","Thermal_pref", "TSN","Volt_comments",  "Voltinism_abbrev","acceptedtsn","Accepted_name", "Study_Citation"))
 epa2$Taxonomic_resolution<-NA
 epa2$Taxonomic_resolution<-ifelse(as.character(epa2$Accepted_name)==as.character(epa2$Genus),"Genus", NA)
@@ -36,15 +39,17 @@ epa2$Accepted_name[which(epa2$Accepted_name=="Epitheca (Epicordulia)")]<-"Epithe
 epa2$Accepted_name[which(epa2$Accepted_name=="Hydrophilus (Dibolocelus)")]<-"Hydrophilus"
 epa2$Accepted_name[which(epa2$Accepted_name=="Epitheca (Tetragoneuria)")]<-"Epitheca"
 
-
 epa2$Taxonomic_resolution[which(epa2$Accepted_name=="Cricotopus (Nostococladius)")]<-"Genus"
 epa2$Taxonomic_resolution<-ifelse(is.na(epa2$Taxonomic_resolution),"Species", epa2$Taxonomic_resolution)
 
 names(epa2)
+write.csv(epa2, "epa_cleaned.csv")
+
 names(biotraits7.5)
 colnames(epa2)<-colnames(biotraits7.5)
 
 biotraits7.6<-rbind(epa2, biotraits7.5)
+write.csv(biotraits7.6, "biotraits7.6.csv")
 
 #first convert any with trait "other" to NA
 biotraits7.6$Feed_prim_abbrev[which(biotraits7.6$Feed_prim_abbrev=="Other (specify in comments)")]<-NA
@@ -135,7 +140,6 @@ colnames(affinities2)<-c("Genus", "Trait_group", "Trait", "Trait_affinity")
 #csv of trait affinities table for EDI
 write.csv(affinities2, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/trait_affinities_table.csv")
 
-
 ################## Prep raw trait table to for hosting by EDI #####################################################
 names(biotraits7.6)
 
@@ -162,3 +166,4 @@ write.csv(traits.long.raw2, "raw_trait_table_EDI.csv")
 write.csv(biotraits7.7, "biotraits_wide3.csv")
 
 save.image("Calc_trait_affinity_mode.RData")
+
