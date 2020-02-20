@@ -22,6 +22,8 @@ Genus<-unique(insects3$genus)
 
 #############read in the USEPA trait database and add taxa from WQP database not currently represented in trait database##############################################################################
 biotraits<-read.csv("freshwater_biotraits_transposed.csv", header=T, na.strings=c("","NA"), stringsAsFactors = FALSE)
+citation<-unique(biotraits$Study_Citation_abbrev)
+write.csv(citation, "epa_citations.csv")
 
 names(biotraits)
 colnames(biotraits)[2]<-"SubjectTaxonomicName"
@@ -55,16 +57,6 @@ revalue(biotraits3$Order[biotraits3$Order == "Heteroptera"] <- "Hemiptera")
 #checking to see if all Heteroptera were converted
 library("dplyr")
 Heteroptera1 <- filter(biotraits3, Order == "Heteroptera")
-
-#merge unqiue insect genera from WQP with trait database to look at trait gaps
-#biotraits4<-merge(Genus, biotraits3, all=TRUE) #not working
-#Genus1<-as.data.frame(Genus, stringsAsFactors=FALSE) #this is list of unique genera in WQP database
-
-#biotraits4<-Genus1 %>%
-  #anti_join(biotraits3, by="Genus") #this returns the Genera for which there is no match in the traits database
-  
-#biotraits5<-biotraits3 %>%
-#  anti_join(Genus1, by="Genus") #this returns the Genera from biotraits for which there is not match in WQP database
 
 #subset insect database to only taxonomic information
 names(insects3)
@@ -104,9 +96,6 @@ length(unique(biotraits8$Genus))
 write.csv(biotraits8, "biotraits8.csv") #write to file for Ethan to work from
 
 ######Create new column for voltinism traits that assign what is in either voltinism or voltinism_abbrev if there is only one entry###########################################################################
-#find instances where there is an entry in each
-biotraits_volt<-subset(biotraits3, Voltinism_abbrev!="NA" & Voltinism!="NA")
-
 #Using the subset function to see if any Volt or Volt_abbrev don't match up
 biotraits_volt<-subset(biotraits8, Voltinism_abbrev!="NA" & Voltinism!="NA")
 biotraits_volt1<-subset(biotraits_volt, Voltinism_abbrev == "bi_multivoltine" & Voltinism != "> 1 Generation per year" | Voltinism_abbrev != "bi_multivoltine" & Voltinism == "> 1 Generation per year")
@@ -125,12 +114,6 @@ biotraits8$Voltinism[biotraits8$Voltinism == '1 Generation per year'] <- 'univol
 #this code works to combine voltinism and voltinism abbreviated columns into a new column
 biotraits8$Volt_new<-biotraits8$Voltinism_abbrev
 biotraits8$Volt_new[is.na(biotraits8$Voltinism_abbrev)]<-biotraits8$Voltinism[is.na(biotraits8$Voltinism_abbrev)]
-
-#this code also works
-#biotraits8<-within(biotraits8, {
-  #Volt_new<-Voltinism
-  #Volt_new[is.na(Voltinism)]<-Voltinism_abbrev[is.na(Voltinism)]
-#})
 
 #need to drop old voltinism comments
 biotraits8$Voltinism<-NULL

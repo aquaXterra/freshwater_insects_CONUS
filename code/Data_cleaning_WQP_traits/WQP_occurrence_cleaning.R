@@ -2,9 +2,9 @@
 ##Author: Laura Twardochleb
 
 ##This script combines and explores all "Benthic Macroinvertebrate" and "Invertebrate" data from WQP for the continental US
-##This script contains code for initial data cleaning up to removing records with geo-referencing errors
+##This script contains code for initial data cleaning up to removing records with georeferencing errors
 ##This script takes cleaned WQP data and assigns taxonomic names for each taxonomic level- from species to order to WQP data by creating a separate column for each taxonomic level
-##A dataset that has removed records with geo-referencing errors or missing datum type "WQP_invertebrate_1979_2016_2.csv"
+##A dataset that has removed records with georeferencing errors or missing datum type "WQP_invertebrate_1979_2016_2.csv"
 
 #Clear all existing data
 rm(list=ls())
