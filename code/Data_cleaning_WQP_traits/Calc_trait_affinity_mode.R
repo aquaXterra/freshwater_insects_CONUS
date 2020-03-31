@@ -198,10 +198,16 @@ biotraits_revision4<-unique(biotraits_revision4)
 write.csv(biotraits_revision4, "biotraits_revision4.csv", fileEncoding = "UTF-8")
 
 #read in corrected csv file
-biotraits_revision4<-read.csv("biotraits_revision4.csv", stringsAsFactors = FALSE)
-#reassign higher taxonomic name columns- some are missing data- some are still missing accepted TSN
-#check genus name assignments
-na.genus<-biotraits_revision4[which(is.na(biotraits_revision4$Genus)),]
+biotraits_revision3<-read.csv("biotraits_revision4.csv", stringsAsFactors = FALSE)
+
+#remove trailing white space from all taxonomic names
+biotraits_revision3$Genus<-gsub("(^\\s+)|(\\s+$)", "", biotraits_revision3$Genus)
+biotraits_revision3$SubjectTaxonomicName<-gsub("(^\\s+)|(\\s+$)", "", biotraits_revision3$SubjectTaxonomicName)
+biotraits_revision3$Family<-gsub("(^\\s+)|(\\s+$)", "", biotraits_revision3$Family)
+biotraits_revision3$Accepted_Name<-gsub("(^\\s+)|(\\s+$)", "", biotraits_revision3$Accepted_Name)
+biotraits_revision3$Order<-gsub("(^\\s+)|(\\s+$)", "", biotraits_revision3$Order)
+
+biotraits_revision4<-biotraits_revision3[,c(3:5,7,10:13,15:17,19,21,23,26)]
 
 ################### Prep trait mode table for EDI ##################################################
 # Use the most common trait value (mode) per taxon
@@ -209,13 +215,10 @@ mode_fn <- function(x) ifelse(any(!is.na(x)), names(which.max(table(x))), as.cha
 
 count_mode <- biotraits_revision4 %>% filter(!is.na(Genus)) %>%group_by(Genus) %>%summarize_all(mode_fn)
 
-#remove comments columns
-count_mode2<-count_mode[,-grep(pattern="comments", colnames(count_mode))] 
-
 ############## prep ancillary taxonomy table #######################################################
 #create ancillary taxonomy table- need to add taxa from occurrence table, also
-names(biotraits_revision4)
-ancillary_taxonomy<-dplyr::select(biotraits_revision4,c("SubjectTaxonomicName","Accepted_Name", "Accepted_TSN", "Order", "Family", "Genus"))%>%unique(.)
+names(biotraits_revision3)
+ancillary_taxonomy<-dplyr::select(biotraits_revision3,c("SubjectTaxonomicName","Accepted_Name", "Accepted_TSN", "Order", "Family", "Genus"))%>%unique(.)
 colnames(ancillary_taxonomy)<-c("Submitted_name", "Accepted_name","Accepted_TSN", "Order", "Family", "Genus")
 #create species column
 attach(ancillary_taxonomy)
@@ -225,15 +228,15 @@ detach(ancillary_taxonomy)
 write.csv(ancillary_taxonomy, "ancillary_taxonomy_table.csv") #ancillary taxonomy with just trait taxa
 
 #How many name changes in trait datasets?
-no_match<-ancillary_taxonomy[which(ancillary_taxonomy$Submitted_name!=ancillary_taxonomy$Accepted_name),]%>%unique(.) #420 names changed, how many genus name changes?
+no_match<-ancillary_taxonomy[which(ancillary_taxonomy$Submitted_name!=ancillary_taxonomy$Accepted_name),]%>%unique(.) #413 names changed, how many genus name changes?
 species.change<-no_match[which(no_match$Accepted_name==no_match$Species),] 
 length(unique(species.change$Species)) #261 species name changes
 genus.change<-no_match[which(no_match$Accepted_name==no_match$Genus),] 
-length(unique(genus.change$Genus)) #60 genus name changes
-length(unique(genus.change$Submitted_name)) #78 submitted names- 78-60=18 cases where taxa were combined 
+length(unique(genus.change$Genus)) #58 genus name changes
+length(unique(genus.change$Submitted_name)) #77 submitted names- 72-58=14 cases where taxa were combined 
 
-length(unique(ancillary_taxonomy$Submitted_name)) #3802
-length(unique(ancillary_taxonomy$Accepted_name)) #3537- 265 name merges
+length(unique(ancillary_taxonomy$Submitted_name)) #3795
+length(unique(ancillary_taxonomy$Accepted_name)) #3535- 260 name merges
 
 #merge ancillary_taxonomy for traits and occurrence taxa
 occurrence_taxa<-read.csv("~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/ancillary_taxonomy_occurrence.csv", stringsAsFactors = FALSE)
@@ -271,27 +274,26 @@ length(unique(genus_dups$Genus)) #36- so 96 names combined into 36 genera
 write.csv(ancillary_taxonomy_master, "ancillary_taxonomy_table_master.csv")
 
 #subset mode table to columns we want in final table and change names
-names(count_mode2)
+names(count_mode)
 
-count_mode3<-dplyr::select(count_mode2,-c("Study_Citation_abbrev", "SubjectTaxonomicName", "Family", "Order", "Study_location_state.x", "Original_TSN", "Accepted_TSN", "Accepted_Name", "Study_Citation"))
-colnames(count_mode3)<-c("Genus","AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_synch_abbrev",  "Feed_mode_sec", "Feed_prim_abbrev","Female_disp_abbrev", "Habit_prim", "Habit_sec", "Max_body_size_abbrev", "Resp_abbrev", "Rheophily_abbrev", "Thermal_pref", "Voltinism_abbrev")
-write.csv(count_mode3, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/trait_mode_table.csv")
+colnames(count_mode)<-c("Genus","AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_synch_abbrev",  "Feed_mode_sec", "Feed_prim_abbrev","Female_disp_abbrev", "Habit_prim", "Habit_sec", "Max_body_size_abbrev", "Resp_abbrev", "Rheophily_abbrev", "Thermal_pref", "Voltinism_abbrev")
+write.csv(count_mode, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/trait_mode_table.csv")
 
 #convert trait mode table to long format
 keycol=c("Trait_group")
 valuecol=c("Trait")
 gathercol<-c("AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_synch_abbrev", "Feed_prim_abbrev", "Feed_mode_sec", "Female_disp_abbrev", "Habit_prim", "Habit_sec", "Max_body_size_abbrev", "Resp_abbrev", "Rheophily_abbrev", "Thermal_pref", "Voltinism_abbrev")
 
-trait_mode.long<- count_mode3%>%gather_(keycol, valuecol, gathercol) #create a column "trait" that holds all trait assignments
+trait_mode.long<- count_mode%>%gather_(keycol, valuecol, gathercol) #create a column "trait" that holds all trait assignments
 trait_mode.long2<-trait_mode.long[order(trait_mode.long$Genus),]
 
 #csv of trait mode table for EDI
 write.csv(trait_mode.long2, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/trait_mode.csv")
 
-length(unique(trait_mode.long2$Genus)) #1015 genera
+length(unique(trait_mode.long2$Genus)) #1007 genera
 
 ################## Calculate affinity scores #######################################################
-colnames(biotraits_revision4)<-c("Study_citation_abbrev", "Submitted_name_trait", "AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_season_comments","Emerge_synch_abbrev", "Family", "Feed_mode_comments", "Feed_mode_sec", "Feed_prim_abbrev", "Female_disp_abbrev", "Genus", "Habit_comments", "Habit_prim", "Habit_sec", "Max_body_size_abbrev", "Order", "Resp_abbrev", "Resp_comments", "Rheophily_abbrev", "Study_location_state", "Thermal_pref", "Submitted_TSN", "Voltinism_comments", "Voltinism_abbrev", "Accepted_TSN", "Accepted_name", "Study_citation")
+colnames(biotraits_revision4)<-c("AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_synch_abbrev", "Feed_mode_sec", "Feed_prim_abbrev", "Female_disp_abbrev", "Genus", "Habit_prim", "Habit_sec", "Max_body_size_abbrev", "Resp_abbrev", "Rheophily_abbrev", "Thermal_pref", "Voltinism_abbrev")
 
 str(biotraits_revision4) #all traits are characters
 unique(biotraits_revision4$Emerge_season_1) #levels consistent- ignore error in reshape2 function about diff. levels
@@ -323,21 +325,22 @@ colnames(affinities2)<-c("Genus", "Trait_group", "Trait", "Trait_affinity")
 write.csv(affinities2, "~/Documents/WaterCube/Ch.3/aquatic_insects/code/Data_cleaning_WQP_traits/trait_affinities_table.csv")
 
 ################## Prep raw trait table to for hosting by EDI #####################################################
-names(biotraits_revision4)
+names(biotraits_revision3)
+colnames(biotraits_revision3)<-c("Study_Citation_abbrev","Submitted_name_trait","AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_season_comments","Emerge_synch_abbrev", "Family","Feed_mode_comments", "Feed_mode_sec", "Feed_prim_abbrev", "Female_disp_abbrev", "Genus", "Habit_comments","Habit_prim", "Habit_sec", "Max_body_size_abbrev","Order", "Resp_abbrev","Resp_comments", "Rheophily_abbrev", "Study_location_state","Thermal_pref","Submitted_TSN", "Voltinism_comments","Voltinism_abbrev", "Accepted_TSN", "Accepted_name", "Study_Citation")
 
 #create taxonomic resolution column
-biotraits_revision4$Taxonomic_resolution<-NA
-biotraits_revision4$Taxonomic_resolution<-ifelse(as.character(biotraits_revision4$Accepted_name)==as.character(biotraits_revision4$Genus),"Genus", NA)
-biotraits_revision4$Taxonomic_resolution<-ifelse(as.character(biotraits_revision4$Accepted_name)==as.character(biotraits_revision4$Family),"Family", biotraits_revision4$Taxonomic_resolution)
-biotraits_revision4$Taxonomic_resolution<-ifelse(as.character(biotraits_revision4$Accepted_name)==as.character(biotraits_revision4$Order),"Order", biotraits_revision4$Taxonomic_resolution)
-biotraits_revision4$Taxonomic_resolution<-ifelse(is.na(biotraits_revision4$Taxonomic_resolution)&!is.na(biotraits_revision4$Genus), "Species", biotraits_revision4$Taxonomic_resolution)
+biotraits_revision3$Taxonomic_resolution<-NA
+biotraits_revision3$Taxonomic_resolution<-ifelse(as.character(biotraits_revision3$Accepted_name)==as.character(biotraits_revision3$Genus),"Genus", NA)
+biotraits_revision3$Taxonomic_resolution<-ifelse(as.character(biotraits_revision3$Accepted_name)==as.character(biotraits_revision3$Family),"Family", biotraits_revision3$Taxonomic_resolution)
+biotraits_revision3$Taxonomic_resolution<-ifelse(as.character(biotraits_revision3$Accepted_name)==as.character(biotraits_revision3$Order),"Order", biotraits_revision3$Taxonomic_resolution)
+biotraits_revision3$Taxonomic_resolution<-ifelse(is.na(biotraits_revision3$Taxonomic_resolution)&!is.na(biotraits_revision3$Genus), "Species", biotraits_revision3$Taxonomic_resolution)
 
 #fix NAs in taxonomic resolution
-no.res<-biotraits_revision4[which(is.na(biotraits_revision4$Taxonomic_resolution)),] #all are subfamily level
-biotraits_revision4$Taxonomic_resolution[which(is.na(biotraits_revision4$Taxonomic_resolution))]<-"Subfamily"
+no.res<-biotraits_revision3[which(is.na(biotraits_revision3$Taxonomic_resolution)),] #all are subfamily level
+biotraits_revision3$Taxonomic_resolution[which(is.na(biotraits_revision3$Taxonomic_resolution))]<-"Subfamily"
 
 #select columns
-biotraits7.7<-dplyr::select(biotraits_revision4, -"Accepted_TSN")
+biotraits7.7<-dplyr::select(biotraits_revision3, -"Accepted_TSN")
 
 #convert to long format- include trait comments
 gathercol2<-c("AdultFlyingStrength_abbrev", "Emerge_season_1", "Emerge_season_2", "Emerge_season_comments" ,"Emerge_synch_abbrev", "Feed_prim_abbrev", "Feed_mode_sec", "Feed_mode_comments","Female_disp_abbrev", "Habit_prim", "Habit_sec", "Habit_comments","Max_body_size_abbrev", "Resp_abbrev", "Resp_comments","Rheophily_abbrev", "Thermal_pref", "Voltinism_abbrev", "Voltinism_comments")
@@ -359,4 +362,5 @@ write.csv(traits.long.raw2, "raw_trait_table_EDI.csv")
 write.csv(biotraits7.7, "biotraits_wide3.csv")
 
 save.image("Calc_trait_affinity_mode.RData")
+
 
