@@ -225,7 +225,7 @@ attach(ancillary_taxonomy)
 ancillary_taxonomy$Species<-NA
 ancillary_taxonomy$Species<-if_else(Accepted_name!=Genus, Accepted_name, as.character(NA))
 detach(ancillary_taxonomy)
-write.csv(ancillary_taxonomy, "ancillary_taxonomy_table.csv") #ancillary taxonomy with just trait taxa
+write.csv(ancillary_taxonomy, "ancillary_taxonomy_table.csv") #ancillary taxonomy with just trait taxa- manually check order and family names since 'taxize' is no longer working, some accepted names and TSNs have two family names
 
 #How many name changes in trait datasets?
 no_match<-ancillary_taxonomy[which(ancillary_taxonomy$Submitted_name!=ancillary_taxonomy$Accepted_name),]%>%unique(.) #413 names changed, how many genus name changes?
@@ -245,7 +245,10 @@ occurrence_taxa2<-unique(occurrence_taxa[,-1])
 #assign missing accepted names to occurrence table- then check & revise in the master and genus occurrence tables
 #first change Submitted_name to sentence case
 occurrence_taxa3<-occurrence_taxa2 %>% mutate(Submitted_name = str_to_sentence(Submitted_name))
-
+occurrence_taxa3$Genus<-gsub("(^\\s+)|(\\s+$)", "", occurrence_taxa3$Genus)
+occurrence_taxa3$Family<-gsub("(^\\s+)|(\\s+$)", "", occurrence_taxa3$Family)
+occurrence_taxa3$Accepted_name<-gsub("(^\\s+)|(\\s+$)", "", occurrence_taxa3$Accepted_name)
+occurrence_taxa3$Order<-gsub("(^\\s+)|(\\s+$)", "", occurrence_taxa3$Order)
 occurrence_taxa3$Accepted_name<-if_else(is.na(occurrence_taxa3$Accepted_name)&occurrence_taxa3$Submitted_name==occurrence_taxa3$Genus, occurrence_taxa3$Genus, occurrence_taxa3$Accepted_name)
 occurrence_taxa3$Accepted_name<-if_else(is.na(occurrence_taxa3$Accepted_name)&occurrence_taxa3$Submitted_name==occurrence_taxa3$Species, occurrence_taxa3$Species, occurrence_taxa3$Accepted_name)
 occurrence_taxa3$Accepted_name<-if_else(is.na(occurrence_taxa3$Accepted_name)&occurrence_taxa3$Submitted_name==occurrence_taxa3$Family, occurrence_taxa3$Family, occurrence_taxa3$Accepted_name)
@@ -253,6 +256,52 @@ occurrence_taxa3$Accepted_name<-if_else(is.na(occurrence_taxa3$Accepted_name)&oc
 occurrence_taxa4<-unique(occurrence_taxa3)
 
 ancillary_taxonomy_master<-full_join(ancillary_taxonomy, occurrence_taxa4, by = c("Submitted_name", "Accepted_name", "Accepted_TSN", "Order", "Family", "Genus", "Species"))
+ancillary_taxonomy_master$Genus<-gsub("(^\\s+)|(\\s+$)", "", ancillary_taxonomy_master$Genus)
+ancillary_taxonomy_master$Family<-gsub("(^\\s+)|(\\s+$)", "", ancillary_taxonomy_master$Family)
+ancillary_taxonomy_master$Accepted_name<-gsub("(^\\s+)|(\\s+$)", "", ancillary_taxonomy_master$Accepted_name)
+ancillary_taxonomy_master$Order<-gsub("(^\\s+)|(\\s+$)", "", ancillary_taxonomy_master$Order)
+
+#which submitted names show up twice?
+submitted_name_dups<-subset(ancillary_taxonomy_master, duplicated(ancillary_taxonomy_master$Submitted_name))
+#correct these entries-some have wrong tsn, etc.
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Argia alberta")]<-102153
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Argia munda")]<-592431
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Epitheca")]<-102035
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Hydropsyche slossonae")]<-115586
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Accepted_name=="Hydropsyche slossonae")]<-"Ceratopsyche"
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Accepted_name=="Hydropsyche slossonae")]<-"Ceratopsyche slossonae"
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Libellula cyanea")]<-101899
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Libellula pulchella")]<-101895
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Submitted_name=="Libellula pulchella")]<-"Libellula pulchella"
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Accepted_name=="Libellula pulchella")]<-"Libellula"
+ancillary_taxonomy_master$Species[which(ancillary_taxonomy_master$Accepted_name=="Libellula pulchella")]<-"Libellula pulchella"
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Submitted_name=="Maccaffertium vicarium")]<-"Maccaffertium vicarium"
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Submitted_name=="Maccaffertium vicarium")]<-"Maccaffertium"
+ancillary_taxonomy_master$Species[which(ancillary_taxonomy_master$Submitted_name=="Maccaffertium vicarium")]<-"Maccaffertium vicarium"
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Maccaffertium vicarium")]<-698255
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Submitted_name=="Nymphomyiidae")]<-NA
+ancillary_taxonomy_master$Family[which(ancillary_taxonomy_master$Accepted_name=="Petrophila")]<-"Crambidae"
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Submitted_name=="Polypedilum flavum")]<-"Polypedilum flavum"
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Steinovelia")]<-721778
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Stylogomphus albistylus")]<-101762
+
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Submitted_name=="Libellula composita")]<-"Libellula composita"
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Libellula composita")]<-101907
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Accepted_name=="Libellula composita")]<-"Libellula"
+ancillary_taxonomy_master$Species[which(ancillary_taxonomy_master$Accepted_name=="Libellula composita")]<-"Libellula composita"
+
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Submitted_name=="Tvetenia discoloripes")]<-"Eukiefferiella discoloripes"
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Eukiefferiella discoloripes")]<-128699
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Accepted_name=="Eukiefferiella discoloripes")]<-"Eukiefferiella"
+ancillary_taxonomy_master$Species[which(ancillary_taxonomy_master$Accepted_name=="Eukiefferiella discoloripes")]<-"Eukiefferiella discoloripes"
+
+ancillary_taxonomy_master2<-unique(ancillary_taxonomy_master)
+submitted_name_dups<-subset(ancillary_taxonomy_master2, duplicated(ancillary_taxonomy_master2$Submitted_name))
+
+ancillary_taxonomy_master$Accepted_name[which(ancillary_taxonomy_master$Submitted_name=="Gomphus rogersi")]<-"Gomphus rogersi"
+ancillary_taxonomy_master$Accepted_TSN[which(ancillary_taxonomy_master$Accepted_name=="Gomphus rogersi")]<-101692
+ancillary_taxonomy_master$Genus[which(ancillary_taxonomy_master$Accepted_name=="Gomphus rogersi")]<-"Gomphus"
+ancillary_taxonomy_master$Species[which(ancillary_taxonomy_master$Accepted_name=="Gomphus rogersi")]<-"Gomphus rogersi"
 
 #how many name changes in occurrence taxa?
 no_match3<-occurrence_taxa4[which(occurrence_taxa4$Submitted_name!=occurrence_taxa4$Accepted_name),] #704 name changes
