@@ -12,8 +12,9 @@ Twardochleb, L., E. Hiltner, M. Pyne, and P. Zarnetske. 2021. Freshwater insects
 ## PRESS RELEASE: 
 MSU Scientists Conduct Largest Freshwater Insect Census in U.S. | Research at Michigan State University. (January 2021).  https://research.msu.edu/msu-scientists-conduct-largest-freshwater-insect-census-in-u-s/.
 
-## This project is part of the MSU Spatial and Community Ecology Lab (SpaCE Lab): https://www.communityecologylab.com/. 
+### This project is part of the MSU Spatial and Community Ecology Lab (SpaCE Lab): https://www.communityecologylab.com/. 
 
-## Funding for this project provided by: National Aeronautics and Space Administration, Grant/Award Number: 80NSSC17K0395. 
+## FUNDING:
+National Aeronautics and Space Administration, Grant/Award Number: 80NSSC17K0395. 
 
 
